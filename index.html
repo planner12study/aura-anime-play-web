@@ -48,9 +48,24 @@
     </div>
 
     <script>
-        let animeData = JSON.parse(localStorage.getItem('aura_anime_list')) || [];
+        // لێرە لینکی Railwayـەکەی خۆت دابنێ (دڵنیا ببەوە لە کۆتاییەکەیدا /api/anime هەبێت)
+        const API_URL = 'https://YOUR-RAILWAY-APP.up.railway.app/api/anime';
 
-        function saveAnime() {
+        let animeData = [];
+
+        async function fetchAnime() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    animeData = await response.json();
+                    renderAnimeList();
+                }
+            } catch (error) {
+                console.error('کێشە لە هێنانی داتاکان:', error);
+            }
+        }
+
+        async function saveAnime() {
             const title = document.getElementById('title').value;
             const season = document.getElementById('season').value;
             const episode = document.getElementById('episode').value;
@@ -62,16 +77,27 @@
             }
 
             const newAnime = { title, season, episode, link };
-            animeData.push(newAnime);
-            localStorage.setItem('aura_anime_list', JSON.stringify(animeData));
 
-            alert('ئەنیمییەکە بە سەرکەوتوویی زیادکرا!');
-            document.getElementById('title').value = '';
-            document.getElementById('season').value = '';
-            document.getElementById('episode').value = '';
-            document.getElementById('videoLink').value = '';
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newAnime)
+                });
 
-            renderAnimeList();
+                if(response.ok) {
+                    alert('ئەنیمییەکە بە سەرکەوتوویی لە سێرڤەر پاشەکەوتکرا!');
+                    document.getElementById('title').value = '';
+                    document.getElementById('season').value = '';
+                    document.getElementById('episode').value = '';
+                    document.getElementById('videoLink').value = '';
+                    fetchAnime(); // لیستەکە نوێ دەکاتەوە
+                } else {
+                    alert('کێشەیەک ڕوویدا لە سێرڤەرەکە.');
+                }
+            } catch (error) {
+                alert('پەیوەندی بە سێرڤەرەوە سەرکەوتوو نەبوو.');
+            }
         }
 
         function renderAnimeList() {
@@ -79,7 +105,7 @@
             listDiv.innerHTML = '';
 
             if(animeData.length === 0) {
-                listDiv.innerHTML = '<p style="text-align:center; color:#888;">هیچ ئەنیمییەک تا ئێستا نەبەستراوە.</p>';
+                listDiv.innerHTML = '<p style="text-align:center; color:#888;">هیچ ئەنیمییەک لە سێرڤەردا نییە.</p>';
                 return;
             }
 
@@ -117,7 +143,8 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        renderAnimeList();
+        // لە کاتی کردنەوەی سایتەکەدا، داتاکان لە سێرڤەرەوە دەهێنرێن
+        fetchAnime();
     </script>
 </body>
 </html>
