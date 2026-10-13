@@ -3,36 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Anime - بەڕێوەبردنی ڤیدیۆ</title>
-    <style>
-        body { font-family: Tahoma, sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; }
-        h1, h2 { color: #bb86fc; text-align: center; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: #1e1e1e; padding: 20px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #333; }
-        input, button { padding: 12px; margin: 8px 0; width: 100%; border-radius: 6px; border: none; box-sizing: border-box; }
-        input { background: #2c2c2c; color: #fff; }
-        button { background: #bb86fc; color: #000; font-weight: bold; cursor: pointer; }
-        button:hover { background: #9955e8; }
-        .anime-item { background: #252525; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        video, iframe { width: 100%; max-height: 400px; border-radius: 8px; margin-top: 10px; background: #000; }
-    </style>
+    <title>Aura Anime</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
     <div class="container">
-        <h1>🎬 Aura Anime Manager</h1>
+        <h1>🎬 Aura Anime</h1>
 
         <!-- بەشی زیادکردنی ئەنیمی -->
         <div class="card">
             <h3>زیادکردنی ئەڵقەی نوێ</h3>
-            <input type="text" id="title" placeholder="ناوی ئەنیمی (بۆ نموونە: Attack on Titan)">
-            <input type="text" id="season" placeholder="وەرز (بۆ نموونە: وەرزی 1)">
-            <input type="text" id="episode" placeholder="ژمارەی ئەڵقە (بۆ نموونە: ئەڵقەی 1)">
-            <input type="text" id="videoLink" placeholder="لینکی ڤیدیۆ (Vidmoly Embed یاخود لینکی ڕاستەوخۆی MP4)">
-            <button onclick="saveAnime()">بڵاوکردنەوە و پاشەکەوتکردن</button>
+            <input type="text" id="title" placeholder="ناوی ئەنیمی">
+            <input type="text" id="season" placeholder="وەرز">
+            <input type="text" id="episode" placeholder="ژمارەی ئەڵقە">
+            <input type="text" id="videoLink" placeholder="لینکی ڤیدیۆ (Embed/MP4)">
+            <button id="save-btn">پاشەکەوتکردن</button>
         </div>
 
-        <!-- بەشی پلەیەر و پیشاندانی ڤیدیۆ -->
+        <!-- بەشی پلەیەر -->
         <div class="card" id="player-container" style="display:none;">
             <h3 id="playing-title">پەخشکردن</h3>
             <div id="video-wrapper"></div>
@@ -40,111 +30,14 @@
 
         <!-- لیستی ئەنیمییەکان -->
         <div class="card">
-            <h2>لیستی ئەنیمییە بەردەستەکان</h2>
-            <div id="anime-list">
-                <!-- لێرە ئەنیمییەکان دەردەکەون -->
-            </div>
+            <h2>لیستی ئەنیمییەکان</h2>
+            <div id="anime-list"></div>
         </div>
     </div>
 
-    <script>
-        // لێرە لینکی Railwayـەکەی خۆت دابنێ (دڵنیا ببەوە لە کۆتاییەکەیدا /api/anime هەبێت)
-        const API_URL = 'https://YOUR-RAILWAY-APP.up.railway.app/api/anime';
-
-        let animeData = [];
-
-        async function fetchAnime() {
-            try {
-                const response = await fetch(API_URL);
-                if (response.ok) {
-                    animeData = await response.json();
-                    renderAnimeList();
-                }
-            } catch (error) {
-                console.error('کێشە لە هێنانی داتاکان:', error);
-            }
-        }
-
-        async function saveAnime() {
-            const title = document.getElementById('title').value;
-            const season = document.getElementById('season').value;
-            const episode = document.getElementById('episode').value;
-            const link = document.getElementById('videoLink').value;
-
-            if(!title || !link) {
-                alert('تکایە ناوی ئەنیمی و لینکی ڤیدیۆ پڕبکەرەوە!');
-                return;
-            }
-
-            const newAnime = { title, season, episode, link };
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newAnime)
-                });
-
-                if(response.ok) {
-                    alert('ئەنیمییەکە بە سەرکەوتوویی لە سێرڤەر پاشەکەوتکرا!');
-                    document.getElementById('title').value = '';
-                    document.getElementById('season').value = '';
-                    document.getElementById('episode').value = '';
-                    document.getElementById('videoLink').value = '';
-                    fetchAnime(); // لیستەکە نوێ دەکاتەوە
-                } else {
-                    alert('کێشەیەک ڕوویدا لە سێرڤەرەکە.');
-                }
-            } catch (error) {
-                alert('پەیوەندی بە سێرڤەرەوە سەرکەوتوو نەبوو.');
-            }
-        }
-
-        function renderAnimeList() {
-            const listDiv = document.getElementById('anime-list');
-            listDiv.innerHTML = '';
-
-            if(animeData.length === 0) {
-                listDiv.innerHTML = '<p style="text-align:center; color:#888;">هیچ ئەنیمییەک لە سێرڤەردا نییە.</p>';
-                return;
-            }
-
-            animeData.forEach((anime, index) => {
-                listDiv.innerHTML += `
-                    <div class="anime-item">
-                        <div>
-                            <strong>${anime.title}</strong> - ${anime.season || ''} - ${anime.episode || ''}
-                        </div>
-                        <button style="width: auto; padding: 8px 15px;" onclick="playVideo(${index})">سەیرکردن  ▶</button>
-                    </div>
-                `;
-            });
-        }
-
-        function playVideo(index) {
-            const anime = animeData[index];
-            const playerContainer = document.getElementById('player-container');
-            const playingTitle = document.getElementById('playing-title');
-            const videoWrapper = document.getElementById('video-wrapper');
-
-            playerContainer.style.display = 'block';
-            playingTitle.innerText = `${anime.title} - ${anime.season} - ${anime.episode}`;
-
-            if(anime.link.includes('<iframe') || anime.link.startsWith('http')) {
-                if(anime.link.startsWith('http') && !anime.link.includes('iframe')) {
-                    videoWrapper.innerHTML = `<video controls src="${anime.link}"></video>`;
-                } else {
-                    videoWrapper.innerHTML = anime.link;
-                }
-            } else {
-                videoWrapper.innerHTML = `<iframe src="${anime.link}" frameborder="0" allowfullscreen></iframe>`;
-            }
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // لە کاتی کردنەوەی سایتەکەدا، داتاکان لە سێرڤەرەوە دەهێنرێن
-        fetchAnime();
-    </script>
+    <!-- بارکردنی فایلی سکریپتەکان بە جیا بۆ خێراکردنی سایتەکە -->
+    <script src="js/api.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
